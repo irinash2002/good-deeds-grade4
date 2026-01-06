@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 לוח מעשים טובים - כיתה ד'</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+        .student-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .student-card:hover {
+            transform: translateY(-5px);
+        }
+        .student-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .actions-section {
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .action-item {
+            background: white;
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .counter {
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        .btn:hover {
+            background: #c0392b;
+        }
+        .btn.add {
+            background: #27ae60;
+        }
+        .btn.add:hover {
+            background: #229954;
+        }
+        .total-score {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #8e44ad;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 10px;
+        }
+        .leaderboard {
+            background: #f8f9fa;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .leaderboard h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .top-student {
+            font-size: 1.3em;
+            color: #f39c12;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌟 לוח מעשים טובים - כיתה ד' 🌟</h1>
+            <p>כל מעשה טוב נספר! 🎉</p>
+        </div>
+
+        <div class="leaderboard">
+            <h2>🏆 המובילים השבוע</h2>
+            <div id="leaderboard-content">טוען...</div>
+        </div>
+
+        <div class="students-grid" id="studentsGrid">
+            <!-- התלמידים יתווספו כאן באמצעות JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const students = ['אנני', 'מאור', 'מאיה', 'סרפימה', 'אמילי', 'מרטין', 'אמיר'];
+        
+        const actions = [
+            { name: 'עזר לחבר', emoji: '🤝', points: 2 },
+            { name: 'סידר את הכיתה', emoji: '🧹', points: 3 },
+            { name: 'השתתף בשיעור', emoji: '✋', points: 1 },
+            { name: 'הביא ציוד לחבר', emoji: '📚', points: 2 },
+            { name: 'היה מנומס', emoji: '😊', points: 1 },
+            { name: 'עשה שלום', emoji: '🕊️', points: 3 },
+            { name: 'עזר למורה', emoji: '👩‍🏫', points: 2 },
+            { name: 'שמר על הסביבה', emoji: '🌱', points: 2 }
+        ];
+
+        function loadData() {
+            const saved = localStorage.getItem('goodDeeds');
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        function saveData(data) {
+            localStorage.setItem('goodDeeds', JSON.stringify(data));
+        }
+
+        function updateCounter(student, action, change) {
+            const data = loadData();
+            if (!data[student]) data[student] = {};
+            if (!data[student][action]) data[student][action] = 0;
+            
+            data[student][action] = Math.max(0, data[student][action] + change);
+            saveData(data);
+            renderStudents();
+            updateLeaderboard();
+        }
+
+        function calculateTotal(student) {
+            const data = loadData();
+            if (!data[student]) return 0;
+            
+            let total = 0;
+            actions.forEach(action => {
+                const count = data[student][action.name] || 0;
+                total += count * action.points;
+            });
+            return total;
+        }
+
+        function updateLeaderboard() {
+            const scores = students.map(student => ({
+                name: student,
+                score: calculateTotal(student)
+            })).sort((a, b) => b.score - a.score);
+
+            const leaderboard = document.getElementById('leaderboard-content');
+            if (scores[0].score > 0) {
+                leaderboard.innerHTML = `
+                    <div class="top-student">🥇 ${scores[0].name} - ${scores[0].score} נקודות!</div>
+                    ${scores.slice(1, 3).map((s, i) => 
+                        s.score > 0 ? `<div>${i === 0 ? '🥈' : '🥉'} ${s.name} - ${s.score} נקודות</div>` : ''
+                    ).join('')}
+                `;
+            } else {
+                leaderboard.innerHTML = 'עדיין לא נרשמו מעשים טובים השבוע 😊';
+            }
+        }
+
+        function renderStudents() {
+            const data = loadData();
+            const grid = document.getElementById('studentsGrid');
+            
+            grid.innerHTML = students.map(student => `
+                <div class="student-card">
+                    <div class="student-name">👦👧 ${student}</div>
+                    
+                    ${actions.map(action => `
+                        <div class="action-item">
+                            <span>${action.emoji} ${action.name} (${action.points} נק')</span>
+                            <div>
+                                <span class="counter">${data[student]?.[action.name] || 0}</span>
+                                <button class="btn add" onclick="updateCounter('${student}', '${action.name}', 1)">+</button>
+                                <button class="btn" onclick="updateCounter('${student}', '${action.name}', -1)">-</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                    
+                    <div class="total-score">
+                        ⭐ סה"כ נקודות: ${calculateTotal(student)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // אתחול הדף
+        renderStudents();
+        updateLeaderboard();
+    </script>
+</body>
+</html>
