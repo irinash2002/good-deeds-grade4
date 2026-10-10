@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мои дела</title>
+<meta name="description" content="Личный планер задач и клиентов с голосовым вводом">
+<meta name="theme-color" content="#6c5ce7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Мои дела">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root {
+  --bg: #f6f5fb;
+  --surface: #ffffff;
+  --surface-2: #f1eff9;
+  --text: #1d1b2e;
+  --muted: #6e6a85;
+  --line: #e7e4f1;
+  --accent: #6c5ce7;
+  --accent-text: #ffffff;
+  --accent-soft: #ece9ff;
+  --danger: #e5484d;
+  --danger-soft: #fdeced;
+  --ok: #1fa971;
+  --ok-soft: #e2f6ec;
+  --warn: #e08a00;
+  --warn-soft: #fff3d9;
+  --shadow: 0 1px 2px rgba(20, 16, 50, .05), 0 6px 20px rgba(20, 16, 50, .06);
+  --radius: 16px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111020;
+    --surface: #1b1a2d;
+    --surface-2: #25233b;
+    --text: #ecebf6;
+    --muted: #9d99b9;
+    --line: #2f2c49;
+    --accent: #8f81ff;
+    --accent-text: #14122a;
+    --accent-soft: #2b2656;
+    --danger: #ff6b70;
+    --danger-soft: #3a1d24;
+    --ok: #3ed598;
+    --ok-soft: #173327;
+    --warn: #ffb547;
+    --warn-soft: #382b14;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111020;
+  --surface: #1b1a2d;
+  --surface-2: #25233b;
+  --text: #ecebf6;
+  --muted: #9d99b9;
+  --line: #2f2c49;
+  --accent: #8f81ff;
+  --accent-text: #14122a;
+  --accent-soft: #2b2656;
+  --danger: #ff6b70;
+  --danger-soft: #3a1d24;
+  --ok: #3ed598;
+  --ok-soft: #173327;
+  --warn: #ffb547;
+  --warn-soft: #382b14;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+svg { display: block; }
+
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+/* Header */
+.top {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+.hello { color: var(--muted); font-size: 15px; }
+.top h1 { margin: 2px 0 0; font-size: 26px; letter-spacing: -.02em; line-height: 1.15; }
+.icon-btn {
+  width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+  background: var(--surface); box-shadow: var(--shadow); color: var(--muted); flex: none;
+}
+.icon-btn:hover { color: var(--text); }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 14px; }
+.stat {
+  background: var(--surface); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow);
+  text-align: left; min-width: 0;
+}
+.stat b { display: block; font-size: 24px; line-height: 1.1; letter-spacing: -.02em; }
+.stat span { color: var(--muted); font-size: 13px; display: block; line-height: 1.25; margin-top: 2px; }
+.stat.is-danger b { color: var(--danger); }
+.stat.is-ok b { color: var(--ok); }
+
+/* Composer */
+.composer {
+  background: var(--surface); border-radius: 20px; box-shadow: var(--shadow); padding: 8px; margin-bottom: 14px;
+}
+.composer-row { display: flex; gap: 8px; align-items: center; }
+.composer input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; padding: 10px 8px; font-size: 16px;
+}
+.composer input::placeholder { color: var(--muted); }
+.mic {
+  width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: var(--accent-soft); color: var(--accent); position: relative; transition: transform .15s;
+}
+.mic:active { transform: scale(.94); }
+.mic.rec { background: var(--danger); color: #fff; }
+.mic.rec::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--danger);
+  animation: pulse 1.2s ease-out infinite;
+}
+@keyframes pulse { from { opacity: .9; transform: scale(.9); } to { opacity: 0; transform: scale(1.35); } }
+.add {
+  height: 46px; padding: 0 16px; border-radius: 23px; background: var(--accent); color: var(--accent-text);
+  font-weight: 600; display: flex; align-items: center; gap: 6px; flex: none;
+}
+.add:active { transform: scale(.97); }
+@media (max-width: 520px) { .add { width: 46px; padding: 0; justify-content: center; } .add span { display: none; } }
+.preview { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px; }
+.preview:not(:empty) { padding: 4px 8px 6px; }
+.hint { color: var(--muted); font-size: 13px; padding: 2px 8px 6px; }
+.hint:empty { display: none; }
+
+/* Chips */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px;
+  font-size: 13px; background: var(--surface-2); color: var(--muted); white-space: nowrap; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.chip svg { width: 13px; height: 13px; flex: none; }
+.chip.client { background: color-mix(in srgb, var(--c) 15%, transparent); color: var(--c); font-weight: 600; }
+.chip.danger { background: var(--danger-soft); color: var(--danger); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.accent { background: var(--accent-soft); color: var(--accent); }
+
+/* Tabs: bottom bar on phone, inline on desktop */
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0;
+  color: var(--muted); font-size: 12px; border-radius: 12px; position: relative;
+}
+.tab svg { width: 22px; height: 22px; }
+.tab.active { color: var(--accent); }
+.tab .badge {
+  position: absolute; top: 2px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 700;
+  display: grid; place-items: center;
+}
+@media (min-width: 720px) {
+  body { padding-bottom: 40px; }
+  .tabs {
+    position: sticky; top: 0; bottom: auto; border: 0; background: var(--bg);
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    display: flex; gap: 6px; padding: 8px 0; margin-bottom: 4px;
+  }
+  .tab { flex-direction: row; gap: 8px; padding: 9px 14px; font-size: 15px; }
+  .tab svg { width: 18px; height: 18px; }
+  .tab.active { background: var(--accent-soft); }
+  .tab .badge { position: static; }
+}
+
+/* Sections & tasks */
+.section { margin: 18px 0 8px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.section h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.section h2.danger { color: var(--danger); }
+.section .count { color: var(--muted); font-size: 13px; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+
+.task {
+  display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border-radius: var(--radius);
+  padding: 12px 14px; box-shadow: var(--shadow); border-left: 3px solid transparent;
+  animation: appear .2s ease-out;
+}
+@keyframes appear { from { opacity: 0; transform: translateY(4px); } }
+.task.is-urgent { border-left-color: var(--danger); }
+.task.is-doing { border-left-color: var(--warn); }
+.check {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); flex: none; margin-top: 1px;
+  display: grid; place-items: center; color: transparent; transition: all .15s;
+}
+.check:hover { border-color: var(--ok); }
+.task.is-doing .check { border-color: var(--warn); background: linear-gradient(90deg, var(--warn-soft) 50%, transparent 50%); }
+.task.is-done .check { background: var(--ok); border-color: var(--ok); color: #fff; }
+.task.is-done .task-title { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 50%, transparent); }
+.task-body { flex: 1; min-width: 0; cursor: pointer; }
+.task-title { font-size: 16px; overflow-wrap: anywhere; }
+.task-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.task-meta:empty { display: none; }
+.task-note { color: var(--muted); font-size: 14px; margin-top: 4px; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.empty {
+  text-align: center; color: var(--muted); padding: 36px 20px; background: var(--surface); border-radius: var(--radius);
+  border: 1.5px dashed var(--line);
+}
+.empty .big { font-size: 34px; margin-bottom: 6px; }
+.empty b { color: var(--text); display: block; margin-bottom: 4px; font-size: 17px; }
+
+/* Toolbar */
+.toolbar { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.search {
+  display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 14px; padding: 0 12px;
+  box-shadow: var(--shadow); color: var(--muted);
+}
+.search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; padding: 11px 0; color: var(--text); }
+.filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.filters::-webkit-scrollbar { display: none; }
+.filter {
+  padding: 7px 13px; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow);
+  white-space: nowrap; font-size: 14px; color: var(--muted); flex: none;
+}
+.filter.active { background: var(--accent); color: var(--accent-text); }
+
+/* Clients */
+.clients { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.client-card {
+  background: var(--surface); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
+  text-align: left; display: flex; flex-direction: column; gap: 10px; min-width: 0;
+}
+.client-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 12px; flex: none; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); font-weight: 700;
+}
+.client-name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.client-sub { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.client-next { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.client-next b { color: var(--text); font-weight: 500; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 16px; border-radius: 12px;
+  background: var(--surface-2); font-weight: 600; font-size: 15px;
+}
+.btn.primary { background: var(--accent); color: var(--accent-text); }
+.btn.danger { color: var(--danger); background: var(--danger-soft); }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn svg { width: 18px; height: 18px; }
+.new-client { width: 100%; margin-top: 14px; padding: 13px; background: var(--surface); box-shadow: var(--shadow); color: var(--accent); }
+
+/* Sheet (dialog) */
+dialog {
+  border: 0; padding: 0; background: var(--surface); color: var(--text);
+  width: min(560px, 100%); max-width: 100%; max-height: 92vh; border-radius: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+}
+dialog::backdrop { background: rgba(15, 12, 35, .45); }
+@media (max-width: 719px) {
+  dialog {
+    margin: auto 0 0; border-radius: 22px 22px 0 0; max-height: 90vh;
+    animation: up .22s ease-out;
+  }
+  @keyframes up { from { transform: translateY(40px); opacity: .5; } }
+}
+.sheet { padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sheet-head h3 { margin: 0; font-size: 19px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .field > .label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.input-wrap { display: flex; gap: 6px; align-items: flex-start; }
+.input, .textarea {
+  width: 100%; border: 1.5px solid var(--line); background: var(--bg); border-radius: 12px; padding: 10px 12px;
+  outline: 0; min-width: 0;
+}
+.input:focus, .textarea:focus { border-color: var(--accent); }
+.textarea { resize: vertical; min-height: 70px; }
+.input-wrap .mic { width: 42px; height: 42px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg button { padding: 8px 4px; border-radius: 10px; font-size: 14px; color: var(--muted); }
+.seg button.active { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.row .input { flex: 1; min-width: 130px; }
+.quick-dates { display: flex; gap: 6px; flex-wrap: wrap; }
+.quick-dates button { padding: 6px 11px; border-radius: 999px; background: var(--surface-2); font-size: 13px; color: var(--muted); }
+.switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.switch input { width: 20px; height: 20px; accent-color: var(--danger); }
+.sheet-actions { display: flex; gap: 8px; justify-content: space-between; margin-top: 4px; }
+.sheet-actions .btn.primary { flex: 1; }
+.sheet .list .task { box-shadow: none; background: var(--bg); }
+.mini-add { display: flex; gap: 6px; }
+.mini-add .input { flex: 1; }
+.contact-links { display: flex; gap: 6px; flex-wrap: wrap; }
+.contact-links a { text-decoration: none; }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+  background: #1d1b2e; color: #fff; padding: 11px 16px; border-radius: 14px; font-size: 15px;
+  display: flex; align-items: center; gap: 14px; opacity: 0; pointer-events: none; transition: all .2s;
+  z-index: 100; max-width: calc(100% - 32px); border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+.toast.show { opacity: 1; transform: translateX(-50%); pointer-events: auto; }
+.toast button { color: #b7adff; font-weight: 700; flex: none; }
+@media (min-width: 720px) { .toast { bottom: 28px; } }
+
+.settings-list { display: flex; flex-direction: column; gap: 8px; }
+.tip { background: var(--accent-soft); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
+.tip b { color: var(--accent); }
+.tip ul { margin: 6px 0 0; padding-left: 18px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="hello" id="hello">Привет</div>
+      <h1 id="dateTitle">Мои дела</h1>
+    </div>
+    <button class="icon-btn" id="settingsBtn" aria-label="Настройки"></button>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="composer">
+    <div class="composer-row">
+      <input id="quick" type="text" autocomplete="off" enterkeyhint="done"
+             placeholder="Скажи или напиши задачу…" aria-label="Новая задача">
+      <button class="mic" id="micBtn" aria-label="Надиктовать голосом"></button>
+      <button class="add" id="addBtn" aria-label="Добавить"></button>
+    </div>
+    <div class="preview" id="preview"></div>
+    <div class="hint" id="hint"></div>
+  </section>
+
+  <nav class="tabs" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+
+<dialog id="sheet"></dialog>
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="importFile" accept="application/json,.json" class="visually-hidden">
+
+<script>
+/* ---------- Icons ---------- */
+const I = {
+  mic: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  plus: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  check: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2" fill="currentColor"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor"/><circle cx="4.5" cy="18" r="1.2" fill="currentColor"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.5 3.5 5.2"/></svg>',
+  done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>',
+  gear: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  fire: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5 5.5 6 5.5 11a5.5 5.5 0 0 1-11 0c0-2.4 1.2-4 2.5-5 .1 1.6.8 2.7 2 3.2C10.6 8.3 11 4.8 12 2z"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>',
+  note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5h14M5 10h14M5 15h9"/></svg>',
+  search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  close: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+};
+
+/* ---------- Storage ---------- */
+const STORE = 'moi-dela-v1';
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+let db = load();
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE));
+    if (d && Array.isArray(d.tasks) && Array.isArray(d.clients)) return d;
+  } catch (e) {}
+  return { tasks: [], clients: [] };
+}
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify(db)); } catch (e) { toast('Не получилось сохранить — проверь память браузера'); }
+}
+
+/* ---------- Dates ---------- */
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const diffDays = s => Math.round((parseISO(s) - today()) / 864e5);
+const WEEKDAYS = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+const fmtShort = d => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+function dueLabel(s) {
+  const n = diffDays(s);
+  if (n === 0) return 'Сегодня';
+  if (n === 1) return 'Завтра';
+  if (n === 2) return 'Послезавтра';
+  if (n === -1) return 'Вчера';
+  if (n > 0 && n < 7) { const w = WEEKDAYS[parseISO(s).getDay()]; return w[0].toUpperCase() + w.slice(1); }
+  return fmtShort(parseISO(s));
+}
+function doneLabel(ts) {
+  const d = new Date(ts); d.setHours(0, 0, 0, 0);
+  const n = Math.round((d - today()) / 864e5);
+  if (n === 0) return 'Сегодня';
+  if (n === -1) return 'Вчера';
+  const s = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+  return s[0].toUpperCase() + s.slice(1);
+}
+
+/* ---------- Smart parsing of Russian phrases ---------- */
+const WB = '(?<![а-яёa-z0-9])', WE = '(?![а-яёa-z0-9])';
+const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const WD_FORMS = [
+  [1, 'понедельник|понедельника'], [2, 'вторник|вторника'], [3, 'среду|среда|среды'], [4, 'четверг|четверга'],
+  [5, 'пятницу|пятница|пятницы'], [6, 'субботу|суббота|субботы'], [0, 'воскресенье|воскресенья'],
+];
+const NUMW = { один: 1, одну: 1, два: 2, две: 2, три: 3, четыре: 4, пять: 5, шесть: 6, семь: 7, пару: 2, несколько: 3 };
+const PRE = '(?:(?:на|до|к|ко|в|во)\\s+)?';
+
+function parseQuick(raw) {
+  let s = ' ' + raw + ' ';
+  const out = { due: null, time: null, urgent: false, done: false, clientId: null, title: '' };
+  const take = (re, fn) => { const m = s.match(re); if (!m) return false; fn(m); s = s.replace(m[0], ' '); return true; };
+  const t = today();
+
+  take(new RegExp('^\\s*(сделала|сделал|сделали|сделано|готово|выполнила|выполнено)' + WE + '[\\s:,.\\-—]*', 'i'), () => out.done = true);
+  take(new RegExp(WB + '(срочно|срочная|срочное|срочный|важно|важное|asap)' + WE + '[!,.]?', 'i'), () => out.urgent = true);
+
+  // time: «в 15:00», «к 9.30», «в 3 часа»
+  take(new RegExp(WB + '(?:в|к|до)\\s+(\\d{1,2})[:.](\\d{2})' + WE, 'i'), m => { if (+m[1] < 24) out.time = pad(+m[1]) + ':' + m[2]; }) ||
+  take(new RegExp(WB + '(?:в|к|до)\\s+(\\d{1,2})\\s+(?:час|часа|часов)(?:\\s+(утра|дня|вечера))?' + WE, 'i'), m => {
+    let h = +m[1]; const p = (m[2] || '').toLowerCase();
+    if ((p === 'дня' || p === 'вечера') && h < 12) h += 12;
+    if (h < 24) out.time = pad(h) + ':00';
+  });
+
+  let d = null;
+  const weekdayRe = new RegExp(WB + PRE + '(?:(?:эту|этот|следующую|следующий)\\s+)?(' + WD_FORMS.map(w => w[1]).join('|') + ')' + WE, 'i');
+  take(new RegExp(WB + PRE + 'послезавтра' + WE, 'i'), () => d = addDays(t, 2)) ||
+  take(new RegExp(WB + PRE + 'завтра' + WE, 'i'), () => d = addDays(t, 1)) ||
+  take(new RegExp(WB + PRE + 'сегодня' + WE, 'i'), () => d = t) ||
+  take(new RegExp(WB + 'через\\s+(\\d+|' + Object.keys(NUMW).join('|') + ')?\\s*(день|дня|дней|неделю|недели|недель|месяц|месяца|месяцев)' + WE, 'i'), m => {
+    const n = m[1] ? (+m[1] || NUMW[m[1].toLowerCase()] || 1) : 1;
+    const u = m[2].toLowerCase();
+    if (u.startsWith('нед')) d = addDays(t, 7 * n);
+    else if (u.startsWith('мес')) { d = new Date(t); d.setMonth(d.getMonth() + n); }
+    else d = addDays(t, n);
+  }) ||
+  take(new RegExp(WB + '(?:на\\s+)?следующей\\s+неделе' + WE, 'i'), () => d = addDays(t, ((8 - t.getDay()) % 7) || 7)) ||
+  take(new RegExp(WB + '(?:в\\s+)?конце\\s+недели' + WE, 'i'), () => d = addDays(t, ((5 - t.getDay() + 7) % 7))) ||
+  take(new RegExp(WB + PRE + '(\\d{1,2})(?:-?го)?\\s+(' + MONTHS.join('|') + ')' + WE, 'i'), m => {
+    d = new Date(t.getFullYear(), MONTHS.indexOf(m[2].toLowerCase()), +m[1]);
+    if (d < addDays(t, -60)) d.setFullYear(d.getFullYear() + 1);
+  }) ||
+  take(new RegExp(WB + PRE + '(\\d{1,2})[./](\\d{1,2})(?:[./](\\d{2,4}))?' + WE, 'i'), m => {
+    const mo = +m[2] - 1; if (mo > 11) return;
+    let y = m[3] ? +m[3] : t.getFullYear(); if (y < 100) y += 2000;
+    d = new Date(y, mo, +m[1]);
+    if (!m[3] && d < addDays(t, -60)) d.setFullYear(d.getFullYear() + 1);
+  }) ||
+  take(weekdayRe, m => {
+    const form = m[1].toLowerCase();
+    const wd = WD_FORMS.find(w => w[1].split('|').includes(form))[0];
+    d = addDays(t, ((wd - t.getDay() + 7) % 7) || 7);
+  });
+  if (d && !isNaN(d)) out.due = iso(d);
+  if (out.time && !out.due) out.due = iso(t);
+  if (out.done && !out.due) out.due = null;
+
+  out.clientId = matchClient(s);
+
+  s = s.replace(/\s+/g, ' ').trim()
+       .replace(/^[,.:;!\-–—\s]+|[,.:;\-–—\s]+$/g, '')
+       .replace(/\s+(?:на|до|к|в|во|и)$/i, '');
+  out.title = s ? s[0].toUpperCase() + s.slice(1) : '';
+  return out;
+}
+
+const norm = s => s.toLowerCase().replace(/ё/g, 'е');
+function clientStems(c) {
+  return norm(c.name).split(/[\s,.\-«»"]+/).filter(p => p.length >= 3).map(p => {
+    const stem = /[аеиоуыэюяйь]$/.test(p) ? p.slice(0, -1) : p;
+    return { stem, max: p.length + 3 };
+  });
+}
+function matchClient(text) {
+  const words = norm(text).match(/[а-яa-z0-9]+/g) || [];
+  let best = null, bestLen = 0;
+  for (const c of db.clients) {
+    for (const { stem, max } of clientStems(c)) {
+      if (stem.length < 2 || stem.length <= bestLen) continue;
+      if (words.some(w => w.startsWith(stem) && w.length <= max)) { best = c.id; bestLen = stem.length; }
+    }
+  }
+  return best;
+}
+
+/* ---------- Helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const COLORS = ['#6c5ce7', '#0ea573', '#e1663f', '#2f80ed', '#d63384', '#0aa5b5', '#c07d00', '#8e44ad'];
+const clientById = id => db.clients.find(c => c.id === id);
+const clientColor = c => c ? (c.color || COLORS[0]) : 'var(--muted)';
+const initials = name => name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+function ensureClient(name) {
+  name = name.trim();
+  if (!name) return null;
+  const found = db.clients.find(c => norm(c.name) === norm(name));
+  if (found) return found.id;
+  const c = { id: uid(), name, contact: '', note: '', color: COLORS[db.clients.length % COLORS.length], createdAt: Date.now() };
+  db.clients.push(c);
+  return c.id;
+}
+const openTasks = () => db.tasks.filter(t => t.status !== 'done');
+function sortTasks(a, b) {
+  if (!!b.urgent - !!a.urgent) return !!b.urgent - !!a.urgent;
+  if ((b.status === 'doing') - (a.status === 'doing')) return (b.status === 'doing') - (a.status === 'doing');
+  const ad = (a.due || '9999') + (a.time || '99'), bd = (b.due || '9999') + (b.time || '99');
+  if (ad !== bd) return ad < bd ? -1 : 1;
+  return a.createdAt - b.createdAt;
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg, undo) {
+  const el = $('#toast');
+  el.innerHTML = `<span>${esc(msg)}</span>` + (undo ? '<button type="button">Отменить</button>' : '');
+  if (undo) el.querySelector('button').onclick = () => { undo(); el.classList.remove('show'); };
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), undo ? 5000 : 3200);
+}
+
+/* ---------- Voice ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+function dictate(input, btn, onDone) {
+  if (!SR) {
+    toast('Голос тут не поддерживается — открой в Chrome или Safari, или нажми микрофон на клавиатуре');
+    input.focus();
+    return;
+  }
+  if (rec) { rec.stop(); return; }
+  const base = input.value.trim() ? input.value.trim() + ' ' : '';
+  rec = new SR();
+  rec.lang = 'ru-RU';
+  rec.interimResults = true;
+  rec.continuous = false;
+  let heard = false;
+  rec.onresult = e => {
+    let text = '';
+    for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
+    heard = true;
+    input.value = base + text.trim();
+    input.dispatchEvent(new Event('input'));
+  };
+  rec.onerror = e => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Разреши доступ к микрофону в настройках браузера');
+    else if (e.error === 'no-speech') toast('Ничего не слышно — попробуй ещё раз');
+    else if (e.error === 'network') toast('Для распознавания речи нужен интернет');
+  };
+  rec.onend = () => {
+    btn.classList.remove('rec');
+    rec = null;
+    if (heard && onDone) onDone();
+  };
+  btn.classList.add('rec');
+  try { rec.start(); } catch (e) { btn.classList.remove('rec'); rec = null; }
+}
+
+/* ---------- State & rendering ---------- */
+const state = { tab: 'today', client: 'all', q: '' };
+try { state.tab = localStorage.getItem(STORE + ':tab') || 'today'; } catch (e) {}
+
+function renderHeader() {
+  const h = new Date().getHours();
+  $('#hello').textContent = h < 5 ? 'Доброй ночи 🌙' : h < 12 ? 'Доброе утро ☀️' : h < 18 ? 'Добрый день ✨' : 'Добрый вечер 🌆';
+  const s = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+  $('#dateTitle').textContent = s[0].toUpperCase() + s.slice(1);
+}
+
+function renderStats() {
+  const open = openTasks();
+  const todayN = open.filter(t => t.due && diffDays(t.due) === 0).length;
+  const overdue = open.filter(t => t.due && diffDays(t.due) < 0).length;
+  const weekAgo = addDays(today(), -6).getTime();
+  const doneWeek = db.tasks.filter(t => t.status === 'done' && t.doneAt >= weekAgo).length;
+  $('#stats').innerHTML = `
+    <button class="stat" data-go="today"><b>${todayN}</b><span>на сегодня</span></button>
+    <button class="stat ${overdue ? 'is-danger' : ''}" data-go="today"><b>${overdue}</b><span>просрочено</span></button>
+    <button class="stat is-ok" data-go="done"><b>${doneWeek}</b><span>готово за неделю</span></button>`;
+  return overdue;
+}
+
+function renderTabs(overdue) {
+  const tabs = [['today', 'Сегодня', I.sun], ['all', 'Задачи', I.list], ['clients', 'Клиенты', I.users], ['done', 'Готово', I.done]];
+  $('#tabs').innerHTML = tabs.map(([id, label, icon]) =>
+    `<button class="tab ${state.tab === id ? 'active' : ''}" data-tab="${id}">${icon}<span>${label}</span>${id === 'today' && overdue ? `<span class="badge">${overdue}</span>` : ''}</button>`
+  ).join('');
+}
+
+function taskMeta(t, { hideClient = false } = {}) {
+  const parts = [];
+  const c = clientById(t.clientId);
+  if (c && !hideClient) parts.push(`<span class="chip client" style="--c:${clientColor(c)}">${esc(c.name)}</span>`);
+  if (t.status === 'done') {
+    if (t.doneAt) parts.push(`<span class="chip ok">${I.check} ${new Date(t.doneAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>`);
+  } else {
+    if (t.due) {
+      const n = diffDays(t.due);
+      const cls = n < 0 ? 'danger' : n === 0 ? 'accent' : '';
+      parts.push(`<span class="chip ${cls}">${I.cal} ${dueLabel(t.due)}${t.time ? ', ' + t.time : ''}</span>`);
+    } else if (t.time) parts.push(`<span class="chip">${I.clock} ${t.time}</span>`);
+    if (t.status === 'doing') parts.push(`<span class="chip warn">${I.play} в работе</span>`);
+    if (t.urgent) parts.push(`<span class="chip danger">${I.fire} срочно</span>`);
+  }
+  return parts.join('');
+}
+
+function taskCard(t, opts) {
+  const cls = ['task', t.status === 'done' && 'is-done', t.status === 'doing' && 'is-doing', t.urgent && t.status !== 'done' && 'is-urgent'].filter(Boolean).join(' ');
+  return `<div class="${cls}" data-id="${t.id}">
+    <button type="button" class="check" data-act="toggle" aria-label="${t.status === 'done' ? 'Вернуть в работу' : 'Отметить сделанной'}">${I.check}</button>
+    <div class="task-body" data-act="open">
+      <div class="task-title">${esc(t.title)}</div>
+      ${t.note ? `<div class="task-note">${esc(t.note)}</div>` : ''}
+      <div class="task-meta">${taskMeta(t, opts)}</div>
+    </div>
+  </div>`;
+}
+
+function section(title, tasks, { danger = false, opts } = {}) {
+  if (!tasks.length) return '';
+  return `<div class="section"><h2 class="${danger ? 'danger' : ''}">${title}</h2><span class="count">${tasks.length}</span></div>
+    <div class="list">${tasks.map(t => taskCard(t, opts)).join('')}</div>`;
+}
+
+function emptyBox(emoji, title, text) {
+  return `<div class="empty" style="margin-top:16px"><div class="big">${emoji}</div><b>${title}</b>${text}</div>`;
+}
+
+function bucketize(tasks) {
+  const b = { overdue: [], today: [], tomorrow: [], week: [], later: [], nodate: [] };
+  for (const t of tasks) {
+    if (!t.due) { b.nodate.push(t); continue; }
+    const n = diffDays(t.due);
+    if (n < 0) b.overdue.push(t);
+    else if (n === 0) b.today.push(t);
+    else if (n === 1) b.tomorrow.push(t);
+    else if (n <= 7) b.week.push(t);
+    else b.later.push(t);
+  }
+  Object.values(b).forEach(a => a.sort(sortTasks));
+  return b;
+}
+
+function viewToday() {
+  const open = openTasks();
+  const b = bucketize(open);
+  const doing = open.filter(t => t.status === 'doing' && !(t.due && diffDays(t.due) <= 0)).sort(sortTasks);
+  const doneToday = db.tasks.filter(t => t.status === 'done' && t.doneAt && doneLabel(t.doneAt) === 'Сегодня')
+    .sort((a, b) => b.doneAt - a.doneAt);
+  let html = section('Просрочено', b.overdue, { danger: true }) + section('Сегодня', b.today) + section('В работе', doing);
+  if (!b.overdue.length && !b.today.length && !doing.length) {
+    html += db.tasks.length
+      ? emptyBox('🎉', 'На сегодня всё чисто', 'Можно выдохнуть или взять что-то из списка задач.')
+      : emptyBox('🎙️', 'Начнём?', 'Нажми на микрофон и скажи, например:<br>«<i>Завтра в 15:00 созвон с Анной по сайту, срочно</i>»<br>или «<i>Сделала: отправила макет</i>» — чтобы записать уже сделанное.');
+    if (b.tomorrow.length) html += section('Завтра', b.tomorrow);
+  }
+  html += section('Сделано сегодня', doneToday);
+  return html;
+}
+
+function viewAll() {
+  const q = norm(state.q.trim());
+  let tasks = openTasks();
+  if (state.client === 'none') tasks = tasks.filter(t => !t.clientId);
+  else if (state.client !== 'all') tasks = tasks.filter(t => t.clientId === state.client);
+  if (q) tasks = tasks.filter(t => norm(t.title + ' ' + (t.note || '') + ' ' + (clientById(t.clientId)?.name || '')).includes(q));
+  const used = new Set(openTasks().map(t => t.clientId).filter(Boolean));
+  const filterClients = db.clients.filter(c => used.has(c.id));
+  let html = `<div class="toolbar">
+    <label class="search">${I.search}<input id="search" type="search" placeholder="Поиск по задачам" value="${esc(state.q)}"></label>
+    ${filterClients.length ? `<div class="filters">
+      <button class="filter ${state.client === 'all' ? 'active' : ''}" data-filter="all">Все</button>
+      ${filterClients.map(c => `<button class="filter ${state.client === c.id ? 'active' : ''}" data-filter="${c.id}">${esc(c.name)}</button>`).join('')}
+      <button class="filter ${state.client === 'none' ? 'active' : ''}" data-filter="none">Личное</button>
+    </div>` : ''}
+  </div>`;
+  const b = bucketize(tasks);
+  const body = section('Просрочено', b.overdue, { danger: true }) + section('Сегодня', b.today) + section('Завтра', b.tomorrow) +
+    section('На этой неделе', b.week) + section('Позже', b.later) + section('Без срока', b.nodate);
+  html += body || emptyBox(q ? '🔍' : '🌿', q ? 'Ничего не нашлось' : 'Список пуст', q ? 'Попробуй другое слово.' : 'Добавь задачу сверху — текстом или голосом.');
+  return html;
+}
+
+function viewDone() {
+  const done = db.tasks.filter(t => t.status === 'done').sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  if (!done.length) return emptyBox('✅', 'Пока ничего не отмечено', 'Здесь будет вся история сделанного — удобно для отчёта клиентам.');
+  const groups = new Map();
+  for (const t of done.slice(0, 300)) {
+    const k = t.doneAt ? doneLabel(t.doneAt) : 'Раньше';
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(t);
+  }
+  return [...groups].map(([k, ts]) => section(k, ts)).join('');
+}
+
+function viewClients() {
+  const open = openTasks();
+  const cards = db.clients.slice().sort((a, b) => {
+    const ao = open.filter(t => t.clientId === a.id).length, bo = open.filter(t => t.clientId === b.id).length;
+    return bo - ao || a.name.localeCompare(b.name, 'ru');
+  }).map(c => {
+    const mine = open.filter(t => t.clientId === c.id).sort(sortTasks);
+    const doneN = db.tasks.filter(t => t.clientId === c.id && t.status === 'done').length;
+    const overdue = mine.some(t => t.due && diffDays(t.due) < 0);
+    const next = mine[0];
+    return `<button class="client-card" data-client="${c.id}">
+      <div class="client-head">
+        <div class="avatar" style="--c:${clientColor(c)}">${esc(initials(c.name))}</div>
+        <div style="min-width:0">
+          <div class="client-name">${esc(c.name)}</div>
+          <div class="client-sub">${c.contact ? esc(c.contact) : `${mine.length} ${plural(mine.length, 'задача', 'задачи', 'задач')} · ${doneN} ${plural(doneN, 'сделана', 'сделано', 'сделано')}`}</div>
+        </div>
+      </div>
+      <div class="row" style="gap:6px">
+        <span class="chip ${overdue ? 'danger' : mine.length ? 'accent' : ''}">${mine.length} ${plural(mine.length, 'открытая', 'открытых', 'открытых')}</span>
+        <span class="chip ok">${doneN} ${plural(doneN, 'готова', 'готово', 'готово')}</span>
+      </div>
+      ${next ? `<div class="client-next">Дальше: <b>${esc(next.title)}</b>${next.due ? ' · ' + dueLabel(next.due) : ''}</div>` : ''}
+    </button>`;
+  }).join('');
+  return (db.clients.length ? `<div class="section"><h2>Клиенты</h2><span class="count">${db.clients.length}</span></div><div class="clients">${cards}</div>`
+    : emptyBox('🤝', 'Клиентов пока нет', 'Добавь клиента — и приложение само будет узнавать его имя в задачах:<br>«<i>позвонить Марине</i>» → задача у клиента Марина.'))
+    + `<button class="btn new-client" data-act="new-client">${I.plus} Новый клиент</button>`;
+}
+
+function render() {
+  renderHeader();
+  const overdue = renderStats();
+  renderTabs(overdue);
+  const v = $('#view');
+  const focused = document.activeElement?.id === 'search';
+  v.innerHTML = { today: viewToday, all: viewAll, clients: viewClients, done: viewDone }[state.tab]();
+  if (focused) { const s = $('#search'); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+  updatePreview();
+}
+
+/* ---------- Actions ---------- */
+function toggleTask(id) {
+  const t = db.tasks.find(x => x.id === id);
+  if (!t) return;
+  const prev = { status: t.status, doneAt: t.doneAt };
+  if (t.status === 'done') { t.status = 'todo'; t.doneAt = null; }
+  else { t.status = 'done'; t.doneAt = Date.now(); }
+  save(); render(); refreshSheet();
+  if (t.status === 'done') toast('Готово! 🎉', () => { Object.assign(t, prev); save(); render(); refreshSheet(); });
+}
+
+function addFromText(text, extra = {}) {
+  const p = parseQuick(text);
+  if (!p.title) { toast('Напиши, что нужно сделать'); return null; }
+  const t = {
+    id: uid(), title: p.title, note: '', clientId: extra.clientId || p.clientId, due: p.due, time: p.time,
+    urgent: p.urgent, status: p.done ? 'done' : 'todo', doneAt: p.done ? Date.now() : null, createdAt: Date.now(),
+  };
+  db.tasks.push(t);
+  save();
+  return t;
+}
+
+function quickAdd() {
+  const input = $('#quick');
+  if (!input.value.trim()) { openTaskSheet(null); return; }
+  const t = addFromText(input.value);
+  if (!t) return;
+  input.value = '';
+  render();
+  toast(t.status === 'done' ? 'Записано в сделанное' : 'Задача добавлена', () => {
+    db.tasks = db.tasks.filter(x => x.id !== t.id); save(); render();
+  });
+}
+
+function updatePreview() {
+  const input = $('#quick'), box = $('#preview');
+  const text = input.value.trim();
+  if (!text) { box.innerHTML = ''; return; }
+  const p = parseQuick(text);
+  const c = clientById(p.clientId);
+  const chips = [];
+  if (p.done) chips.push(`<span class="chip ok">${I.check} уже сделано</span>`);
+  if (c) chips.push(`<span class="chip client" style="--c:${clientColor(c)}">${esc(c.name)}</span>`);
+  if (p.due) chips.push(`<span class="chip accent">${I.cal} ${dueLabel(p.due)}${p.time ? ', ' + p.time : ''}</span>`);
+  if (p.urgent) chips.push(`<span class="chip danger">${I.fire} срочно</span>`);
+  box.innerHTML = chips.join('');
+}
+
+/* ---------- Sheets ---------- */
+const sheet = $('#sheet');
+let sheetCtx = null;
+function openSheet(html, ctx) {
+  sheetCtx = ctx;
+  sheet.innerHTML = html;
+  if (!sheet.open) sheet.showModal();
+}
+function closeSheet() { if (rec) rec.stop(); sheet.close(); sheetCtx = null; }
+function refreshSheet() { if (sheet.open && sheetCtx?.type === 'client') openClientSheet(sheetCtx.id, true); }
+sheet.addEventListener('click', e => { if (e.target === sheet) closeSheet(); });
+sheet.addEventListener('close', () => { if (!sheet.open) sheetCtx = null; });
+
+function micBtn(target) { return `<button type="button" class="mic" data-mic="${target}" aria-label="Надиктовать">${I.mic}</button>`; }
+
+function openTaskSheet(id, preset = {}) {
+  const t = id ? db.tasks.find(x => x.id === id) : { title: '', note: '', status: 'todo', due: null, time: null, urgent: false, clientId: null, ...preset };
+  if (!t) return;
+  const c = clientById(t.clientId);
+  const t0 = today();
+  openSheet(`<form class="sheet" id="taskForm">
+    <div class="sheet-head"><h3>${id ? 'Задача' : 'Новая задача'}</h3><button type="button" class="icon-btn" data-act="close" aria-label="Закрыть">${I.close}</button></div>
+    <div class="field"><label for="fTitle">Что сделать</label>
+      <div class="input-wrap"><textarea class="textarea" id="fTitle" rows="2" required style="min-height:52px">${esc(t.title)}</textarea>${micBtn('fTitle')}</div></div>
+    <div class="field"><span class="label">Статус</span>
+      <div class="seg" id="fStatus">
+        ${[['todo', 'Запланировано'], ['doing', 'В работе'], ['done', 'Сделано']].map(([v, l]) => `<button type="button" data-v="${v}" class="${t.status === v ? 'active' : ''}">${l}</button>`).join('')}
+      </div></div>
+    <div class="field"><label for="fClient">Клиент</label>
+      <input class="input" id="fClient" list="clientList" placeholder="Без клиента — личное" value="${esc(c ? c.name : '')}" autocomplete="off">
+      <datalist id="clientList">${db.clients.map(c => `<option value="${esc(c.name)}">`).join('')}</datalist></div>
+    <div class="field"><span class="label">Срок</span>
+      <div class="row"><input class="input" type="date" id="fDue" value="${t.due || ''}" aria-label="Дата"><input class="input" type="time" id="fTime" value="${t.time || ''}" aria-label="Время" style="flex:0 1 130px"></div>
+      <div class="quick-dates">
+        <button type="button" data-due="${iso(t0)}">Сегодня</button>
+        <button type="button" data-due="${iso(addDays(t0, 1))}">Завтра</button>
+        <button type="button" data-due="${iso(addDays(t0, ((8 - t0.getDay()) % 7) || 7))}">В понедельник</button>
+        <button type="button" data-due="${iso(addDays(t0, 7))}">Через неделю</button>
+        <button type="button" data-due="">Без срока</button>
+      </div></div>
+    <label class="switch"><input type="checkbox" id="fUrgent" ${t.urgent ? 'checked' : ''}> <span>Срочно 🔥</span></label>
+    <div class="field"><label for="fNote">Заметка</label>
+      <div class="input-wrap"><textarea class="textarea" id="fNote" placeholder="Детали, ссылки, что обсудили…">${esc(t.note || '')}</textarea>${micBtn('fNote')}</div></div>
+    <div class="sheet-actions">
+      ${id ? `<button type="button" class="btn danger" data-act="delete-task">Удалить</button>` : ''}
+      <button type="submit" class="btn primary">Сохранить</button>
+    </div>
+  </form>`, { type: 'task', id });
+
+  const form = $('#taskForm');
+  form.querySelectorAll('#fStatus button').forEach(b => b.onclick = () => {
+    form.querySelectorAll('#fStatus button').forEach(x => x.classList.toggle('active', x === b));
+  });
+  form.querySelectorAll('[data-due]').forEach(b => b.onclick = () => { $('#fDue').value = b.dataset.due; if (!b.dataset.due) $('#fTime').value = ''; });
+  form.onsubmit = e => {
+    e.preventDefault();
+    const title = $('#fTitle').value.trim();
+    if (!title) { $('#fTitle').focus(); return; }
+    const status = form.querySelector('#fStatus .active').dataset.v;
+    const task = id ? db.tasks.find(x => x.id === id) : { id: uid(), createdAt: Date.now() };
+    Object.assign(task, {
+      title, note: $('#fNote').value.trim(), clientId: ensureClient($('#fClient').value),
+      due: $('#fDue').value || null, time: $('#fTime').value || null, urgent: $('#fUrgent').checked,
+      doneAt: status === 'done' ? (task.status === 'done' ? task.doneAt : Date.now()) : null, status,
+    });
+    if (!id) db.tasks.push(task);
+    save();
+    const back = preset.backToClient;
+    closeSheet(); render();
+    if (back) openClientSheet(back);
+    toast(id ? 'Сохранено' : 'Задача добавлена');
+  };
+  form.querySelector('[data-act="delete-task"]')?.addEventListener('click', () => {
+    const idx = db.tasks.findIndex(x => x.id === id);
+    const [removed] = db.tasks.splice(idx, 1);
+    save(); closeSheet(); render();
+    toast('Задача удалена', () => { db.tasks.splice(idx, 0, removed); save(); render(); });
+  });
+}
+
+function contactLinks(contact) {
+  if (!contact) return '';
+  const links = [];
+  const phone = contact.match(/\+?\d[\d\s()\-]{6,}\d/);
+  if (phone) {
+    const p = phone[0].replace(/[^\d+]/g, '');
+    links.push(`<a class="chip accent" href="tel:${p}">${I.phone} Позвонить</a>`);
+    links.push(`<a class="chip accent" href="https://wa.me/${p.replace('+', '')}" target="_blank" rel="noopener">${I.send} WhatsApp</a>`);
+  }
+  const tg = contact.match(/(?:t\.me\/|@)([a-z0-9_]{4,})/i);
+  if (tg) links.push(`<a class="chip accent" href="https://t.me/${tg[1]}" target="_blank" rel="noopener">${I.send} Telegram</a>`);
+  const mail = contact.match(/[^\s@,;]+@[^\s@,;]+\.[a-z]{2,}/i);
+  if (mail) links.push(`<a class="chip accent" href="mailto:${mail[0]}">${I.mail} Написать</a>`);
+  return links.length ? `<div class="contact-links">${links.join('')}</div>` : '';
+}
+
+function openClientSheet(id, keepScroll) {
+  const isNew = !id;
+  const c = id ? clientById(id) : { name: '', contact: '', note: '' };
+  if (!c) return;
+  const scroll = keepScroll ? sheet.scrollTop : 0;
+  const open = id ? openTasks().filter(t => t.clientId === id).sort(sortTasks) : [];
+  const done = id ? db.tasks.filter(t => t.clientId === id && t.status === 'done').sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0)) : [];
+  openSheet(`<form class="sheet" id="clientForm">
+    <div class="sheet-head">
+      <div class="client-head">${isNew ? '' : `<div class="avatar" style="--c:${clientColor(c)}">${esc(initials(c.name))}</div>`}<h3>${isNew ? 'Новый клиент' : esc(c.name)}</h3></div>
+      <button type="button" class="icon-btn" data-act="close" aria-label="Закрыть">${I.close}</button>
+    </div>
+    <div class="field"><label for="cName">Имя или компания</label><input class="input" id="cName" value="${esc(c.name)}" required placeholder="Например, Анна — кофейня"></div>
+    <div class="field"><label for="cContact">Контакты</label><input class="input" id="cContact" value="${esc(c.contact)}" placeholder="+7 900 000-00-00, @telegram, почта">
+      ${contactLinks(c.contact)}</div>
+    <div class="field"><label for="cNote">Заметки о клиенте</label>
+      <div class="input-wrap"><textarea class="textarea" id="cNote" placeholder="Что за проект, договорённости, бюджет, пожелания…">${esc(c.note)}</textarea>${micBtn('cNote')}</div></div>
+    ${isNew ? '' : `
+    <div class="field"><span class="label">Добавить задачу для клиента</span>
+      <div class="mini-add"><input class="input" id="cTask" placeholder="Например: в пятницу прислать правки" autocomplete="off">${micBtn('cTask')}<button type="button" class="add" data-act="client-add" aria-label="Добавить">${I.plus}</button></div></div>
+    ${open.length ? `<div class="section" style="margin:4px 0 0"><h2>Открытые</h2><span class="count">${open.length}</span></div><div class="list">${open.map(t => taskCard(t, { hideClient: true })).join('')}</div>` : ''}
+    ${done.length ? `<div class="section" style="margin:4px 0 0"><h2>Сделано</h2><span class="count">${done.length}</span></div><div class="list">${done.slice(0, 30).map(t => taskCard(t, { hideClient: true })).join('')}</div>` : ''}`}
+    <div class="sheet-actions">
+      ${isNew ? '' : `<button type="button" class="btn danger" data-act="delete-client">Удалить</button>`}
+      <button type="submit" class="btn primary">${isNew ? 'Добавить клиента' : 'Сохранить'}</button>
+    </div>
+  </form>`, { type: 'client', id });
+  sheet.scrollTop = scroll;
+
+  const form = $('#clientForm');
+  const addTask = () => {
+    const inp = $('#cTask');
+    if (!inp.value.trim()) return;
+    const t = addFromText(inp.value, { clientId: id });
+    if (t) { render(); openClientSheet(id, true); toast('Задача добавлена'); setTimeout(() => $('#cTask')?.focus(), 50); }
+  };
+  form.querySelector('[data-act="client-add"]')?.addEventListener('click', addTask);
+  $('#cTask')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
+  form.onsubmit = e => {
+    e.preventDefault();
+    const name = $('#cName').value.trim();
+    if (!name) return;
+    if (isNew) {
+      const dup = db.clients.find(x => norm(x.name) === norm(name));
+      if (dup) { toast('Такой клиент уже есть'); return; }
+      db.clients.push({ id: uid(), name, contact: $('#cContact').value.trim(), note: $('#cNote').value.trim(), color: COLORS[db.clients.length % COLORS.length], createdAt: Date.now() });
+    } else Object.assign(c, { name, contact: $('#cContact').value.trim(), note: $('#cNote').value.trim() });
+    save(); closeSheet(); render();
+    toast(isNew ? 'Клиент добавлен' : 'Сохранено');
+  };
+  form.querySelector('[data-act="delete-client"]')?.addEventListener('click', () => {
+    if (!confirm(`Удалить клиента «${c.name}»? Задачи останутся, но без клиента.`)) return;
+    db.clients = db.clients.filter(x => x.id !== id);
+    db.tasks.forEach(t => { if (t.clientId === id) t.clientId = null; });
+    if (state.client === id) state.client = 'all';
+    save(); closeSheet(); render();
+    toast('Клиент удалён');
+  });
+}
+
+function openSettings() {
+  let theme = 'auto';
+  try { theme = localStorage.getItem(STORE + ':theme') || 'auto'; } catch (e) {}
+  openSheet(`<div class="sheet">
+    <div class="sheet-head"><h3>Настройки</h3><button type="button" class="icon-btn" data-act="close" aria-label="Закрыть">${I.close}</button></div>
+    <div class="field"><span class="label">Тема</span>
+      <div class="seg" id="themeSeg">${[['auto', 'Как в системе'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(([v, l]) => `<button type="button" data-theme="${v}" class="${theme === v ? 'active' : ''}">${l}</button>`).join('')}</div></div>
+    <div class="tip"><b>Как говорить с приложением</b>
+      <ul>
+        <li>«Завтра в 11:00 созвон с Анной» — дата и время подставятся сами</li>
+        <li>«В пятницу сдать сайт Ромашке, срочно» — клиент узнаётся по имени</li>
+        <li>«Через 3 дня выставить счёт», «15 ноября продлить домен»</li>
+        <li>«Сделала: отправила макет» — сразу в «Готово»</li>
+      </ul></div>
+    <div class="field"><span class="label">Резервная копия</span>
+      <div class="settings-list">
+        <button type="button" class="btn" data-act="export">Скачать копию (JSON)</button>
+        <button type="button" class="btn" data-act="import">Восстановить из копии</button>
+      </div>
+      <span class="hint" style="padding:0">Данные хранятся только на этом устройстве, в браузере. Делай копию иногда — и чтобы перенести на другое устройство.</span></div>
+    <button type="button" class="btn danger" data-act="wipe">Удалить все данные</button>
+  </div>`, { type: 'settings' });
+  sheet.querySelectorAll('#themeSeg button').forEach(b => b.onclick = () => {
+    setTheme(b.dataset.theme);
+    sheet.querySelectorAll('#themeSeg button').forEach(x => x.classList.toggle('active', x === b));
+  });
+}
+
+function setTheme(v) {
+  if (v === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', v);
+  try { localStorage.setItem(STORE + ':theme', v); } catch (e) {}
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `moi-dela-${iso(new Date())}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!Array.isArray(d.tasks) || !Array.isArray(d.clients)) throw new Error();
+    if (!confirm(`Заменить текущие данные копией? (${d.tasks.length} задач, ${d.clients.length} клиентов)`)) return;
+    db = d; save(); closeSheet(); render(); toast('Данные восстановлены');
+  } catch (err) { toast('Не получилось прочитать файл'); }
+});
+
+/* ---------- Events ---------- */
+$('#micBtn').innerHTML = I.mic;
+$('#addBtn').innerHTML = I.plus + '<span>Добавить</span>';
+$('#settingsBtn').innerHTML = I.gear;
+$('#quick').addEventListener('input', updatePreview);
+$('#quick').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); quickAdd(); } });
+$('#addBtn').addEventListener('click', quickAdd);
+$('#settingsBtn').addEventListener('click', openSettings);
+$('#micBtn').addEventListener('click', () => {
+  const btn = $('#micBtn');
+  $('#hint').textContent = rec ? '' : 'Слушаю… Скажи задачу, например «завтра отправить Анне счёт»';
+  dictate($('#quick'), btn, () => {
+    $('#hint').textContent = 'Проверь и нажми «Добавить» — или поправь текст';
+  });
+});
+
+$('#stats').addEventListener('click', e => {
+  const b = e.target.closest('[data-go]');
+  if (b) setTab(b.dataset.go);
+});
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]');
+  if (b) setTab(b.dataset.tab);
+});
+function setTab(tab) {
+  state.tab = tab;
+  try { localStorage.setItem(STORE + ':tab', tab); } catch (e) {}
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handleListClick(e) {
+  const card = e.target.closest('.task');
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  if (card && act === 'toggle') return toggleTask(card.dataset.id);
+  if (card && act === 'open') {
+    const back = sheet.open && sheetCtx?.type === 'client' ? sheetCtx.id : null;
+    return openTaskSheet(card.dataset.id, { backToClient: back });
+  }
+  const cl = e.target.closest('[data-client]');
+  if (cl) return openClientSheet(cl.dataset.client);
+  if (act === 'new-client') return openClientSheet(null);
+  const f = e.target.closest('[data-filter]');
+  if (f) { state.client = f.dataset.filter; render(); }
+}
+$('#view').addEventListener('click', handleListClick);
+$('#view').addEventListener('input', e => { if (e.target.id === 'search') { state.q = e.target.value; render(); } });
+
+sheet.addEventListener('click', e => {
+  const mic = e.target.closest('[data-mic]');
+  if (mic) { e.preventDefault(); return dictate(document.getElementById(mic.dataset.mic), mic); }
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  if (act === 'close') return closeSheet();
+  if (act === 'export') return exportData();
+  if (act === 'import') return $('#importFile').click();
+  if (act === 'wipe') {
+    if (confirm('Точно удалить все задачи и клиентов? Это нельзя отменить.')) {
+      db = { tasks: [], clients: [] }; save(); closeSheet(); render(); toast('Всё очищено');
+    }
+    return;
+  }
+  if (e.target.closest('.task')) handleListClick(e);
+});
+
+// Keep dates fresh if the app stays open past midnight
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+
+(function initTheme() {
+  try { const t = localStorage.getItem(STORE + ':theme'); if (t && t !== 'auto') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+})();
+render();
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
