@@ -328,6 +328,7 @@ dialog::backdrop { background: rgba(15, 12, 35, .45); }
 .tip { background: var(--accent-soft); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
 .tip b { color: var(--accent); }
 .tip ul { margin: 6px 0 0; padding-left: 18px; }
+dialog.ask { width: min(400px, calc(100% - 32px)); margin: auto; border-radius: 22px; animation: none; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 </style>
 </head>
@@ -359,6 +360,7 @@ dialog::backdrop { background: rgba(15, 12, 35, .45); }
 </div>
 
 <dialog id="sheet"></dialog>
+<dialog id="ask" class="ask"><form method="dialog" class="sheet"><p id="askText" style="margin:0;font-size:17px"></p><div class="sheet-actions"><button value="no" class="btn ghost">Отмена</button><button value="yes" class="btn danger" id="askOk">Да</button></div></form></dialog>
 <div class="toast" id="toast" role="status"></div>
 <input type="file" id="importFile" accept="application/json,.json" class="visually-hidden">
 
@@ -547,6 +549,16 @@ function sortTasks(a, b) {
   return a.createdAt - b.createdAt;
 }
 
+/* ---------- Confirm (native confirm() is blocked in embedded views) ---------- */
+function ask(text, okLabel = 'Да') {
+  const d = $('#ask');
+  $('#askText').textContent = text;
+  $('#askOk').textContent = okLabel;
+  d.returnValue = '';
+  d.showModal();
+  return new Promise(res => d.addEventListener('close', () => res(d.returnValue === 'yes'), { once: true }));
+}
+
 /* ---------- Toast ---------- */
 let toastTimer;
 function toast(msg, undo) {
@@ -582,7 +594,7 @@ function dictate(input, btn, onDone) {
     input.dispatchEvent(new Event('input'));
   };
   rec.onerror = e => {
-    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Разреши доступ к микрофону в настройках браузера');
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast(window.top !== window ? 'Здесь микрофон недоступен — открой приложение по своей ссылке на GitHub Pages' : 'Разреши доступ к микрофону в настройках браузера');
     else if (e.error === 'no-speech') toast('Ничего не слышно — попробуй ещё раз');
     else if (e.error === 'network') toast('Для распознавания речи нужен интернет');
   };
@@ -969,8 +981,8 @@ function openClientSheet(id, keepScroll) {
     save(); closeSheet(); render();
     toast(isNew ? 'Клиент добавлен' : 'Сохранено');
   };
-  form.querySelector('[data-act="delete-client"]')?.addEventListener('click', () => {
-    if (!confirm(`Удалить клиента «${c.name}»? Задачи останутся, но без клиента.`)) return;
+  form.querySelector('[data-act="delete-client"]')?.addEventListener('click', async () => {
+    if (!await ask(`Удалить клиента «${c.name}»? Задачи останутся, но без клиента.`, 'Удалить')) return;
     db.clients = db.clients.filter(x => x.id !== id);
     db.tasks.forEach(t => { if (t.clientId === id) t.clientId = null; });
     if (state.client === id) state.client = 'all';
@@ -1013,11 +1025,18 @@ function setTheme(v) {
   try { localStorage.setItem(STORE + ':theme', v); } catch (e) {}
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+async function exportData() {
+  const json = JSON.stringify(db, null, 2);
+  const filename = `moi-dela-${iso(new Date())}.json`;
+  const dl = window.claude?.use ? await window.claude.use('downloads').catch(() => null) : null;
+  if (dl) {
+    try { await dl.save({ filename, data: json }); } catch (e) { if (e?.code !== 'declined') toast('Не получилось сохранить файл'); }
+    return;
+  }
+  const blob = new Blob([json], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `moi-dela-${iso(new Date())}.json`;
+  a.download = filename;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
@@ -1029,7 +1048,7 @@ $('#importFile').addEventListener('change', async e => {
   try {
     const d = JSON.parse(await f.text());
     if (!Array.isArray(d.tasks) || !Array.isArray(d.clients)) throw new Error();
-    if (!confirm(`Заменить текущие данные копией? (${d.tasks.length} задач, ${d.clients.length} клиентов)`)) return;
+    if (!await ask(`Заменить текущие данные копией? (${d.tasks.length} задач, ${d.clients.length} клиентов)`, 'Заменить')) return;
     db = d; save(); closeSheet(); render(); toast('Данные восстановлены');
   } catch (err) { toast('Не получилось прочитать файл'); }
 });
@@ -1090,9 +1109,9 @@ sheet.addEventListener('click', e => {
   if (act === 'export') return exportData();
   if (act === 'import') return $('#importFile').click();
   if (act === 'wipe') {
-    if (confirm('Точно удалить все задачи и клиентов? Это нельзя отменить.')) {
-      db = { tasks: [], clients: [] }; save(); closeSheet(); render(); toast('Всё очищено');
-    }
+    ask('Точно удалить все задачи и клиентов? Это нельзя отменить.', 'Удалить всё').then(ok => {
+      if (ok) { db = { tasks: [], clients: [] }; save(); closeSheet(); render(); toast('Всё очищено'); }
+    });
     return;
   }
   if (e.target.closest('.task')) handleListClick(e);
